@@ -55,7 +55,7 @@ function configFile() {
   return path.join(backend().data, 'character_config.yaml');
 }
 
-const BRIDGE_URL = 'http://127.0.0.1:8765';
+const BRIDGE_URL = 'http://127.0.0.1:8775';
 
 async function bridgeAlive() {
   try {
@@ -318,6 +318,18 @@ function buildTray() {
         accelerator: 'Command+Shift+F',
         click: (item) => setStage(item.checked),
       },
+      { type: 'separator' },
+      {
+        label: 'Reset demo bookings',
+        click: async () => {
+          // Fresh example bookings and a fresh conversation on both desks.
+          try {
+            await fetch(`${BRIDGE_URL}/staff/demo-reset`, { method: 'POST' });
+            await fetch(`${BRIDGE_URL}/reset`, { method: 'POST' });
+          } catch {}
+        },
+      },
+      { label: 'Open front desk dashboard', click: () => shell.openExternal(`${BRIDGE_URL}/staff`) },
       { type: 'separator' },
       { label: 'Change model…', click: () => { win?.show(); win?.webContents.send('pick-model'); } },
       { label: 'Reset position', click: () => { if (win) { win.setBounds({ x: 60, y: 60, width: 420, height: 680 }); win.show(); } } },

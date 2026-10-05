@@ -754,6 +754,6 @@ if __name__ == "__main__":
     uvicorn.run(
         app,
         host=bridge.get("host", "127.0.0.1"),
-        port=int(bridge.get("port", 8765)),
+        port=int(bridge.get("port", 8775)),
         log_level="warning",
     )

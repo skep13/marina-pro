@@ -39,7 +39,7 @@ app.whenReady().then(async () => {
 
   console.log('\nPHASE 2: bridge appears at ~14s');
   const srv = fakeBridge();
-  await new Promise(r => srv.listen(8765, '127.0.0.1', r));
+  await new Promise(r => srv.listen(8775, '127.0.0.1', r));
   for (const t of [2, 5]) {
     await new Promise(r => setTimeout(r, t * 1000));
     const s = await win.webContents.executeJavaScript(state());
@@ -55,7 +55,7 @@ app.whenReady().then(async () => {
 
   console.log('\nPHASE 4: bridge comes back');
   const srv2 = fakeBridge();
-  await new Promise(r => srv2.listen(8765, '127.0.0.1', r));
+  await new Promise(r => srv2.listen(8775, '127.0.0.1', r));
   await new Promise(r => setTimeout(r, 4000));
   s = await win.webContents.executeJavaScript(state());
   console.log(`  status="${s.status}"  notice=${s.notice ? JSON.stringify(s.notice) : 'none'}`);

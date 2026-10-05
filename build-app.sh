@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds Marina.app and a mountable Marina.dmg.
+# Builds Marina Concierge.app and a mountable dmg.
 #
 # The .app is self-contained: it carries its own Python 3.12, the backend's
 # dependencies, the Kokoro voice, the Whisper model and a starter config, so
@@ -74,11 +74,13 @@ echo "==> Copying the backend and its assets"
 rsync -a --exclude '__pycache__' --exclude 'tests' server "$STAGE/"
 rsync -a models/kokoro "$STAGE/models/"
 cp character_config.example.yaml "$STAGE/character_config.example.yaml"
+cp hotel.example.yaml "$STAGE/hotel.example.yaml"
 
-echo "==> Building Marina.app"
+APP_NAME="Marina Concierge"
+echo "==> Building $APP_NAME.app"
 ( cd app && npx electron-builder --mac dir )
 
-APP="app/dist/mac-arm64/Marina.app"
+APP="app/dist/mac-arm64/$APP_NAME.app"
 
 # Sign before the dmg is built, or the dmg ships an unsigned copy. The signature
 # is ad-hoc, which is enough for macOS to remember the microphone grant.
@@ -89,18 +91,18 @@ codesign --verify --deep "$APP" && echo "    signature verified"
 xattr -cr "$APP"
 
 echo "==> Building the dmg from the signed app"
-( cd app && npx electron-builder --mac dmg --prepackaged dist/mac-arm64/Marina.app )
+( cd app && npx electron-builder --mac dmg --prepackaged "dist/mac-arm64/$APP_NAME.app" )
 
-DMG="$(ls -t app/dist/Marina-*-arm64.dmg 2>/dev/null | head -1 || true)"
+DMG="$(ls -t app/dist/Marina-Concierge-*-arm64.dmg 2>/dev/null | head -1 || true)"
 
 echo "==> Installing to /Applications"
-rm -rf /Applications/Marina.app
-cp -R "$APP" /Applications/Marina.app
-xattr -cr /Applications/Marina.app
+rm -rf "/Applications/$APP_NAME.app"
+cp -R "$APP" "/Applications/$APP_NAME.app"
+xattr -cr "/Applications/$APP_NAME.app"
 
 echo
 echo "Done."
-echo "  Marina.app is in /Applications ($(du -sh "$APP" | cut -f1))."
+echo "  $APP_NAME.app is in /Applications ($(du -sh "$APP" | cut -f1))."
 if [ -n "$DMG" ]; then
   echo "  $DMG ($(du -h "$DMG" | cut -f1))"
 else

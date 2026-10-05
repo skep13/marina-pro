@@ -2,7 +2,7 @@ import { THREE, GLTFLoader, VRMLoaderPlugin, VRMUtils } from './vendor/vrm-bundl
 
 // In a browser the page comes from the bridge itself (see web-shim.js).
 const WEB = !!window.marina?.web;
-const BRIDGE = WEB ? '' : 'http://127.0.0.1:8765';
+const BRIDGE = WEB ? '' : 'http://127.0.0.1:8775';
 
 const el = (id) => document.getElementById(id);
 const canvas     = el('stage');

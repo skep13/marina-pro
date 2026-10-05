@@ -199,7 +199,7 @@ copied to `hotel.yaml`: fill that in with the hotel's own rooms, rates,
 policies, facilities and activities. Put a `.vrm` avatar at
 `app/models/model.vrm`, or pick one from the app.
 
-The front desk dashboard is at `http://127.0.0.1:8765/staff`. To reset the
+The front desk dashboard is at `http://127.0.0.1:8775/staff`. To reset the
 bookings and load a few example stays for a demo:
 
 ```bash

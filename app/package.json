@@ -1,7 +1,7 @@
 {
-  "name": "marina",
+  "name": "marina-concierge",
   "version": "1.0.0",
-  "description": "Transparent desktop VRM avatar assistant",
+  "description": "Virtual hotel receptionist with a 3D avatar",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -17,10 +17,10 @@
     "esbuild": "^0.28.2",
     "three": "^0.185.1"
   },
-  "productName": "Marina",
+  "productName": "Marina Concierge",
   "build": {
-    "appId": "com.jacobmatthews.marina",
-    "productName": "Marina",
+    "appId": "com.jacobmatthews.marina-concierge",
+    "productName": "Marina Concierge",
     "directories": {
       "buildResources": "build",
       "output": "dist"
@@ -71,8 +71,8 @@
       }
     },
     "dmg": {
-      "title": "Marina",
-      "artifactName": "Marina-${version}-arm64.dmg",
+      "title": "Marina Concierge",
+      "artifactName": "Marina-Concierge-${version}-arm64.dmg",
       "window": {
         "width": 540,
         "height": 380

@@ -188,7 +188,7 @@ sovits_ping_config:
 
 bridge:
   host: "127.0.0.1"
-  port: 8765
+  port: 8775
 
 # Serves the avatar to phone browsers (see "Phone app" in the README).
 web:

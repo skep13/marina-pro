@@ -71,6 +71,13 @@ def mount(app):
         _check(request)
         return _snapshot()
 
+    @app.post("/staff/demo-reset")
+    def staff_demo_reset(request: Request):
+        """Clear the bookings and load the example stays, for a demo."""
+        _check(request)
+        from process.hotel import demo
+        return {"ok": True, "bookings": demo.reset()}
+
     @app.post("/staff/handoffs/{hid}/done")
     def staff_done(hid: str, request: Request):
         _check(request)
