@@ -1,4 +1,5 @@
-"""Tools the model can call: timers, clipboard, opening links, remembering.
+"""Tools the model can call: timers, clipboard, opening links, remembering,
+and for a hotel, bookings and activities (see process/hotel/tools.py).
 
 open_url only accepts http and https.
 """
@@ -142,6 +143,12 @@ SPECS = [
             "required": ["fact"],
         }}),
 ]
+
+# The hotel's tools, when hotel.enabled is on.
+from process.hotel import profile as _hotel  # noqa: E402
+from process.hotel import tools as _hotel_tools  # noqa: E402
+
+SPECS += [(name, fn, _hotel.enabled, spec) for name, fn, spec in _hotel_tools.SPECS]
 
 _HANDLERS = {name: (fn, on) for name, fn, on, _ in SPECS}
 

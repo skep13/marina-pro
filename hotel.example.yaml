@@ -1,0 +1,96 @@
+# The hotel's own facts. Marina answers from this file and nothing else, so
+# anything a guest might ask about belongs here. Copy it to hotel.yaml and
+# fill it in; the first run copies it for you if hotel.yaml is missing.
+#
+# Rooms, rates and activities here feed the built-in booking store. With a
+# property management system connected (hotel.booking_system in
+# character_config.yaml), rooms and availability come from the PMS instead
+# and only the policies, facilities and FAQs below are used.
+
+# A made-up hotel for demos. The phone number is from the range Ofcom keeps
+# for drama, so it can never ring a real line.
+name: "The Kestrel Bay Hotel"
+address: "1 Harbour Road, Kestrel Bay, Cornwall"
+phone: "+44 1632 960 000"
+email: "stay@kestrelbay.example"
+website: "https://kestrelbay.example"
+currency: "GBP"
+timezone: "Europe/London"
+
+check_in: "15:00"
+check_out: "11:00"
+
+policies:
+  cancellation: >
+    Free cancellation up to 48 hours before arrival. Cancellations inside
+    48 hours, and no-shows, are charged the first night.
+  free_cancellation_hours: 48
+  children: "Children of all ages are welcome. Cots are free on request."
+  pets: "Dogs are welcome in Garden rooms for 20 pounds a night."
+  smoking: "The hotel is non-smoking throughout."
+  payment: >
+    Bookings are secured with a card through a secure payment link sent by
+    text or email. Card details are never taken over the phone or by Marina.
+  parking: "Free parking for 30 cars, first come first served."
+
+room_types:
+  - id: classic_double
+    name: "Classic Double"
+    description: "A double bed, rain shower and a view over the town."
+    max_guests: 2
+    count: 12
+    rate: 140          # per night, in `currency`
+    weekend_rate: 165  # Friday and Saturday nights
+  - id: harbour_view
+    name: "Harbour View King"
+    description: "A king bed, a bath and full views over the harbour."
+    max_guests: 2
+    count: 8
+    rate: 195
+    weekend_rate: 230
+  - id: garden_family
+    name: "Garden Family Room"
+    description: "A king bed and two singles, opening onto the garden. Dogs allowed."
+    max_guests: 4
+    count: 4
+    rate: 220
+    weekend_rate: 255
+
+facilities:
+  - "Restaurant open 7am to 10:30am for breakfast and 6pm to 9:30pm for dinner."
+  - "Bar open noon to 11pm."
+  - "Spa with a pool, sauna and steam room, open 7am to 9pm."
+  - "Gym open 24 hours with a room key."
+  - "Free wifi throughout. The network is KestrelGuest; the password is on the key card wallet."
+
+activities:
+  - id: harbour_cruise
+    name: "Harbour cruise"
+    description: "A 90 minute boat trip round the harbour and the estuary."
+    times: ["10:00", "14:00"]
+    days: [mon, tue, wed, thu, fri, sat, sun]
+    capacity: 12
+    price: 25          # per person
+    provider: "Kestrel Bay Boat Co."   # an outside company; guests are told
+  - id: spa_massage
+    name: "Fifty minute massage"
+    description: "A full body massage in the spa."
+    times: ["10:00", "11:00", "14:00", "15:00", "16:00", "17:00"]
+    days: [mon, tue, wed, thu, fri, sat, sun]
+    capacity: 2
+    price: 85
+  - id: cookery_class
+    name: "Cornish cookery class"
+    description: "Two hours with the head chef, cooking a three course lunch."
+    times: ["11:00"]
+    days: [sat]
+    capacity: 8
+    price: 60
+
+faq:
+  - q: "Is breakfast included?"
+    a: "Breakfast is included in every room rate."
+  - q: "Can I check in early?"
+    a: "Early check-in depends on the room being ready. Luggage can be left at reception from 8am."
+  - q: "Is there a lift?"
+    a: "Yes, a lift serves every floor, and two Classic Doubles are fully accessible."

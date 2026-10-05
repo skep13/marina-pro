@@ -18,6 +18,7 @@ from process.backend import mode as backend_mode
 from process.backend import model_for
 from process.backend import note_used
 from process import config
+from process.hotel import profile as hotel
 from process.config import load_config, resolve_data
 from process.memory import extract as memory_extract
 from process.memory import store as memory
@@ -68,11 +69,17 @@ def _stable_context():
 
 
 def system_message():
+    if hotel.enabled():
+        # The hotel's rules and facts, and the real date for bookings.
+        # Rules go last: small models follow the end of the prompt best.
+        context = hotel.facts_block() + hotel.date_context() + hotel.rules_block()
+    else:
+        context = _stable_context()
     return {
         "role": "system",
         "content": (config.system_prompt()
                     + (memory.as_prompt_block() if _recall() else "")
-                    + _stable_context()),
+                    + context),
     }
 
 
@@ -272,6 +279,8 @@ def note_exchange(user_text, assistant_text):
 
 
 def llm_response(user_input):
+    _new_guest()
+    user_input = (user_input or "")[:MAX_INPUT_CHARS]
     history = _window(load_history())
     history.append({"role": "user", "content": user_input})
 
@@ -325,12 +334,38 @@ def _rejects_tools(e):
     return "tool" in body or "function" in body or e.status_code in (404, 501)
 
 
+MAX_TOOL_ROUNDS = 4
+
+# Longest message passed to the model; anything past it is dropped.
+MAX_INPUT_CHARS = int(_llm.get("max_input_chars", 1000))
+
+
+def _new_guest():
+    """At a hotel desk, a pause means the next person is someone else. Start
+    them on a clean conversation so nothing from the last guest carries
+    over: hotel.forget_after_seconds, 120 by default, 0 to keep it."""
+    if not hotel.enabled():
+        return
+    after = float((char_config.get("hotel") or {}).get("forget_after_seconds", 120))
+    path = _history_file()
+    if after > 0 and os.path.exists(path) and time.time() - os.path.getmtime(path) > after:
+        reset_history()
+        print("[hotel] new guest: started a fresh conversation", flush=True)
+
+# Said while a tool runs if she hasn't said anything yet, so a guest isn't
+# left in silence while she checks.
+FILLERS = ("One moment.", "Let me check that for you.", "Let me have a look.")
+
+
 def llm_stream(user_input=None, extra_system=None, use_tools=True):
     """Yield reply text as it arrives. The caller saves the turn with
     `save_turn`, since only it knows how much was actually spoken.
 
     `extra_system` is added to the system prompt for this call only.
     """
+    _new_guest()
+    if user_input is not None:
+        user_input = user_input[:MAX_INPUT_CHARS]
     history = _window(load_history())
     if user_input is not None:
         history.append({"role": "user", "content": user_input})
@@ -344,7 +379,9 @@ def llm_stream(user_input=None, extra_system=None, use_tools=True):
     messages = [system] + history
     offer = tools.definitions() if (use_tools and _tools_supported) else None
 
-    for attempt in range(2):
+    rounds = 0
+    spoke = False
+    while True:
         calls = {}
         try:
             stream = (get_reply_stream(messages, tools=offer, tool_choice="auto")
@@ -354,9 +391,13 @@ def llm_stream(user_input=None, extra_system=None, use_tools=True):
                     continue
                 delta = event.choices[0].delta
                 _collect_tool_calls(delta, calls)
+                if calls and not spoke:
+                    spoke = True
+                    yield random.choice(FILLERS) + " "
                 piece = getattr(delta, "content", None)
                 if not piece:
                     continue
+                spoke = True
                 yield piece
         except Exception as e:
             if offer is None or not _rejects_tools(e):
@@ -381,9 +422,14 @@ def llm_stream(user_input=None, extra_system=None, use_tools=True):
         }]
         for i, call in sorted(calls.items()):
             result = tools.run(call["name"], call["arguments"])
+            print(f"[tool] {call['name']} -> {result[:160]}", flush=True)
             messages.append({
                 "role": "tool",
                 "tool_call_id": call["id"] or f"call_{i}",
                 "content": result,
             })
-        offer = None
+        # A request can take a few steps, like finding a booking and then
+        # adding an activity to it. After that, she has to answer.
+        rounds += 1
+        if rounds >= MAX_TOOL_ROUNDS:
+            offer = None

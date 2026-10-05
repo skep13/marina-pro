@@ -27,3 +27,8 @@ app/test/*.json
 
 app/renderer/vendor/
 character_config.yaml
+
+# The hotel's own profile and its bookings, which hold guests' details.
+hotel.yaml
+hotel.db
+hotel.db-journal

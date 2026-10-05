@@ -734,6 +734,12 @@ def warmup():
     return {"ok": True}
 
 
+from process.hotel import profile as _hotel  # noqa: E402
+
+if _hotel.enabled():
+    from process.hotel import staff
+    staff.mount(app)
+
 _web = config.get("web") or {}
 if _web.get("enabled"):
     # Last, because it mounts the avatar UI at / and would shadow later routes.

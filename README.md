@@ -1,70 +1,72 @@
 # Marina
 
-**A private voice assistant with an animated 3D avatar, running entirely on hardware I own.**
+**A virtual receptionist for hotels, with an animated 3D avatar, running
+entirely on the hotel's own hardware.**
 
-You talk to Marina out loud and she answers in her own voice, with a face that
-lip-syncs, reacts while you speak and shows when she is thinking. Speech
-recognition and the voice run on the device in front of you. The language model
-runs on my own machines, with automatic failover between them, and no AI cloud
-service is involved at any point.
+Guests talk to Marina at reception or over the phone. She checks rooms and
+prices, takes bookings, books activities, answers questions about the hotel,
+and passes anything else to a member of staff. Speech recognition and her voice
+run on the device at the desk, the language model runs on the hotel's own
+machines, and no AI cloud service is involved at any point.
 
-It runs as a macOS desktop app and as a phone web app, from the same codebase.
-
-![Marina in stage view, answering a question](docs/stage.jpg)
+![Marina at reception, quoting for a stay](docs/stage.jpg)
 
 ---
 
-## What it can do today
+## What she does
 
 | | |
 | --- | --- |
-| **Spoken conversation** | Talk naturally, or type. Replies start playing before the whole answer has been generated, sentence by sentence. |
-| **General questions** | Answers from whatever language model it is connected to. |
-| **Timers and reminders** | "Remind me in ten minutes to call back." |
-| **Open links** | Opens web pages on the computer it runs on. |
-| **Memory** | Can remember lasting facts across conversations. Off in the presentation profile. |
-| **Look at the screen** | Optional: describes what's on screen using a vision model. Off by default. |
-| **Phone app** | The same assistant in a phone browser, with its own microphone, over a private network. |
-| **Stage view** | Full screen with large subtitles and the question shown on screen, for showing it to a room. |
+| **Rooms and prices** | Checks what's free for any dates and quotes the total, including weekend rates. |
+| **Bookings** | Reads the details back, waits for a yes, books, and gives a reference that's easy to say aloud. Rooms are held until the guest pays through a secure link. |
+| **Changes and cancellations** | Needs the booking reference and the surname. Explains the cancellation policy before cancelling. |
+| **Activities** | Lists times with spaces left, and books them onto a guest's stay. |
+| **Questions about the hotel** | Answers from the hotel's own facts file: check-in times, parking, pets, breakfast, the spa. Says so when she doesn't know. |
+| **Handing over** | Complaints, special requests, emergencies and "can I speak to someone" go straight to staff. |
+| **Two desks** | A Reception profile for guests in person and a Phone line profile for callers, switchable live. |
+| **Front desk dashboard** | Staff see every booking, activity and hand-over as it happens. |
 
-## Where it could be used
-
-These are the kinds of roles it is built towards. Each would need the assistant
-connected to the organisation's own information (a knowledge base, ticketing,
-visitor lists), which is the natural next step for the project.
-
-| Role | What it would do |
-| --- | --- |
-| **Front desk and reception** | Greet visitors, answer common questions, give directions, check who is expected. |
-| **IT service desk, first line** | Take routine questions (password resets, how-tos, known issues) and hand anything complex to a person. |
-| **Staff onboarding and training** | A patient guide new starters can ask anything, as often as they like. |
-| **Events and showrooms** | An approachable presence that talks to visitors and explains a product or service. |
-| **Accessibility** | A voice-first way into services for people who find screens and forms hard. |
-| **Regulated environments** | Anywhere data cannot go to a public AI service: public sector, healthcare, finance, legal. Because the model runs on hardware the organisation owns, conversations stay in-house. |
+![The front desk dashboard](docs/dashboard.jpg)
 
 ## Why it has an avatar
 
 The avatar isn't decoration. In a spoken conversation, a face does several jobs
 that a voice alone can't:
 
-- **It shows what the system is doing.** She leans in and keeps eye contact
-  while listening, glances away while thinking, and moves her eyebrows and head
-  on stressed words while speaking. People know when to talk and when to wait,
-  which is the biggest source of friction with plain voice assistants.
-- **It makes speech easier to follow.** Lip sync and expression help in noisy
-  places such as receptions and events, and help people who rely partly on
-  lip-reading.
-- **It is more approachable.** People are far more willing to start talking to a
-  face than to a microphone icon, especially in a public space like a front
-  desk or an event stand.
-- **It gives a service a consistent identity.** The same character, voice and
-  manner every time, which an organisation can choose to match its brand.
-- **It is swappable.** Any VRM model works, so the character can be changed
-  without touching the rest of the system.
+- **It shows what's happening.** She leans in and keeps eye contact while
+  listening, glances away while thinking, and moves with her speech. Guests know
+  when to talk and when to wait.
+- **It makes speech easier to follow** in a busy lobby, and helps guests who
+  rely partly on lip-reading. Everything she says is also captioned.
+- **It's more approachable** than a microphone icon, especially at a front desk.
+- **It's the hotel's own character.** Any VRM model, voice and personality can
+  be used, so it can match the hotel's brand.
 
-![Marina waving](docs/wave.jpg)
+![Marina waving hello](docs/wave.jpg)
 
----
+## Guest data and safety
+
+- **The hotel owns all of it.** Bookings live on the hotel's own machine.
+  Conversations never go to an AI company and are never used for training.
+- **Microphone audio never leaves the device.** It's transcribed locally and
+  discarded; nothing is recorded.
+- **Minimal data.** A booking holds a name, an email or phone number, and the
+  stay. Card details are never taken: payment is by a secure link.
+- **No memory of guests.** After a short pause at the desk, the next guest
+  starts a fresh conversation, so nothing carries over.
+- **Bookings are protected.** Looking up, changing or cancelling needs both the
+  reference and the surname. There's no way to ask her for a list of guests.
+- **Right to erasure.** A guest's personal details can be wiped while the stay
+  itself is kept for the hotel's accounts.
+- **On topic.** She only helps with the hotel, and has no ability to browse,
+  open links or read the clipboard. Messages are length-capped, and bookings
+  per desk are rate-limited so no one can tie up the rooms.
+- **Private network only.** Machines talk over an encrypted private network, and
+  the staff dashboard only opens on the front desk computer unless a staff key
+  is set.
+
+The hotel remains the data controller under UK GDPR, and should publish its own
+privacy notice and tell guests they're speaking to an AI.
 
 ## How it is built
 
@@ -79,6 +81,11 @@ flowchart LR
         TTS["Voice<br/>Kokoro"]
         Bridge["Bridge<br/>FastAPI, streaming"]
     end
+    subgraph Hotel["Hotel's own machine"]
+        Tools["Booking tools<br/>validated server-side"]
+        DB[("Bookings<br/>SQLite or PMS")]
+        Staff["Front desk dashboard"]
+    end
     subgraph Models["Language models, tried in order"]
         GPU["1. GPU server"]
         Mini["2. Mini PC<br/>Qwen3 8B on Ollama"]
@@ -89,6 +96,7 @@ flowchart LR
     Bridge -.-> Mini
     Bridge -.-> Local
     Bridge --> TTS --> UI
+    Bridge --> Tools --> DB --> Staff
 ```
 
 **Desktop app.** An Electron app with a transparent, always-on-top window. The
@@ -116,11 +124,21 @@ private network, and installable to the home screen. Speech recognition and the
 voice run in a small Proxmox container on a home server, so the phone only
 records and plays audio.
 
-**Presentation profile.** Personality and behaviour are configuration. The
-profile shipped here is poised and concise, sticks to facts it has been given
-about itself, never reads the clipboard, keeps no memory of guests, and doesn't
-speak unprompted. Profiles can be switched live from the menu without a restart,
-and each keeps its own conversation history.
+**Hotel layer.** The hotel's facts, rooms, rates, policies and activities live
+in one file, `hotel.yaml`. Marina answers only from it, and books through a
+small set of tools (check availability, book, look up, change, cancel, book an
+activity, hand over to staff) that validate everything server-side: dates,
+capacity, opening days, and the surname on a booking. Bookings go into a SQLite
+database on the hotel's own machine. A property management system plugs in by
+implementing the same interface (`BookingSystem` in
+`server/process/hotel/store.py`).
+
+**Reception and phone profiles.** Personality and behaviour are configuration.
+The Reception profile greets guests in person; the Phone line profile works by
+voice alone, reading back details and spelling references. Both switch live from
+the menu, keep separate conversations, and record which desk each booking came
+from. Neither reads the clipboard, opens links, keeps memory of guests, or
+speaks unprompted.
 
 **Animation.** Procedural rather than canned: breathing, weight shifts, natural
 blinking and eye movement, hair physics, five-shape lip sync driven by the
@@ -128,18 +146,6 @@ audio spectrum, and gestures acted out from the reply text. The wave uses
 inverse kinematics: it places the hand on a path beside the head and solves the
 elbow and shoulder, which keeps the motion natural and the palm facing the
 viewer.
-
-## Privacy
-
-- **The microphone audio never leaves the device it was recorded on.** Speech
-  recognition and the voice are local. I verified this by watching every network
-  connection through a full conversation: the only ones open were local.
-- **Only the text of the conversation goes to the language model**, which runs
-  on hardware I control, reached over an encrypted private network.
-- **No third-party AI service is used anywhere.**
-- The bridge listens only on the local machine; the phone app is reachable only
-  inside the private network.
-
 ## Performance
 
 Measured on the hardware this runs on day to day.
@@ -163,13 +169,14 @@ need a GPU.
 ## Running it
 
 Requires an Apple Silicon Mac on macOS 13 or later, and a language model
-endpoint. The simplest is [Ollama](https://ollama.com) on the same Mac:
+endpoint. The simplest is [Ollama](https://ollama.com) on the same Mac. Tool
+calling needs a model that supports it; Qwen3 8B works well:
 
 ```bash
-ollama pull llama3.2:3b
+ollama pull qwen3:8b
 ```
 
-Then set up and run from a checkout:
+Then from a checkout:
 
 ```bash
 ./setup-mac.sh
@@ -187,9 +194,17 @@ cp character_config.example.yaml character_config.yaml
 ./start-app.sh
 ```
 
-`setup-mac.sh` installs Python 3.12, the dependencies and the voice model. Put a
-`.vrm` avatar at `app/models/model.vrm`, or pick one from the app. VRoid Studio
-exports these via **Export → VRM**.
+Set `llm.model` to the model you pulled. On first run `hotel.example.yaml` is
+copied to `hotel.yaml`: fill that in with the hotel's own rooms, rates,
+policies, facilities and activities. Put a `.vrm` avatar at
+`app/models/model.vrm`, or pick one from the app.
+
+The front desk dashboard is at `http://127.0.0.1:8765/staff`. To reset the
+bookings and load a few example stays for a demo:
+
+```bash
+python server/hotel_demo.py
+```
 
 To build the standalone app and installer:
 
@@ -202,55 +217,55 @@ To build the standalone app and installer:
 | | |
 | --- | --- |
 | ⌘⇧Space, or Space in the window | Start and stop listening |
-| ⌘⇧F | Stage view |
+| ⌘⇧F | Stage view, full screen for a reception display |
 | ⌘⇧. | Interrupt her |
 | ⌘⇧H | Show or hide |
 
-### Phone app
+## Status
 
-Set `web.enabled: true` and run the bridge on an always-on Linux machine. Put it
-behind something that provides HTTPS, such as `tailscale serve`, since phone
-browsers only allow the microphone on secure pages. Then open the address on the
-phone and use **Add to Home Screen**.
+Working today: everything above, in English, with bookings in Marina's own
+database. Not yet built:
 
-### Adding language model servers
+- **A real phone number.** The Phone line profile shows how she behaves on a
+  call; connecting a number needs a telephony service such as Twilio or SIP.
+- **Payment links.** The booking flow tells the guest a link is coming, but
+  sending it needs a payment provider.
+- **Property management systems.** The interface is there; adapters for Opera,
+  Mews or Cloudbeds aren't.
+- **Other languages.** The model and voice support several; speech recognition
+  and testing are needed to switch them on.
+- **Several conversations at once.** One setup handles one guest at a time.
+- **Expiry of unpaid bookings.**
 
-Add more endpoints under `llm` in `character_config.yaml`. The example config
-shows a main server, extra machines and a local fallback.
+On small models (8B), multi-step bookings occasionally slip, for example
+quoting without checking first. A larger model on a GPU server, together with
+the read-back-and-confirm step, is the recommended setup.
 
 ## Project layout
 
 ```
+hotel.example.yaml          the hotel's facts, rooms, rates and activities
 server/
   marina_server.py          the bridge: HTTP API, streaming replies, phone uploads
-  process/backend.py        the list of language model servers and failover order
+  hotel_demo.py             reset the bookings with example stays
+  process/hotel/            facts, booking store, guest tools, staff dashboard
+  process/backend.py        language model servers and failover order
   process/llm_funcs/        chat client, failover, tool calls, history
-  process/asr_func/         Faster-Whisper, microphone recording, interruption detection
-  process/tts_func/         voice synthesis (Kokoro, or GPT-SoVITS)
-  process/text_func/        splits replies into speakable sentences and gestures
+  process/asr_func/         speech recognition and recording
+  process/tts_func/         voice synthesis
   process/web.py            serves the avatar to phone browsers
   process/config.py         configuration and live profile switching
 app/
   main.js                   Electron: window, menu bar, shortcuts, stage view
   renderer/app.js           avatar, animation, lip sync, inverse kinematics, UI
-  renderer/web-shim.js      lets the same UI run in a phone browser
 build-app.sh                builds the self-contained .app and .dmg
 ```
-
-## Roadmap
-
-- Connect to an organisation's own documents, so answers come from its knowledge
-  base rather than the model's general knowledge.
-- Integrations for ticketing and visitor management.
-- One shared memory across the desktop and phone.
-- Wake word, so it can be hands-free.
-- More languages for speech and voice.
 
 ## Credits
 
 Started from [rayenfeng/riko_project](https://github.com/rayenfeng/riko_project),
 a terminal voice-chat pipeline. The avatar app, failover, phone app, animation
-system, presentation profile and packaging were built on top of it.
+system, hotel layer and packaging were built on top of it.
 
 - [three-vrm](https://github.com/pixiv/three-vrm), [three.js](https://threejs.org)
   and [Electron](https://www.electronjs.org)
