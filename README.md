@@ -61,12 +61,32 @@ that a voice alone can't:
 - **On topic.** She only helps with the hotel, and has no ability to browse,
   open links or read the clipboard. Messages are length-capped, and bookings
   per desk are rate-limited so no one can tie up the rooms.
+- **Logs record what happened, not what was said.** Names, emails and
+  booking details stay out of the log unless the hotel turns
+  `hotel.log_conversations` on.
 - **Private network only.** Machines talk over an encrypted private network, and
   the staff dashboard only opens on the front desk computer unless a staff key
   is set.
 
 The hotel remains the data controller under UK GDPR, and should publish its own
 privacy notice and tell guests they're speaking to an AI.
+
+### Where the booking data lives
+
+- **On the hotel's machine** (today): a SQLite database next to Marina.
+- **In a cloud property management system** (Mews, Cloudbeds, Opera Cloud and
+  so on): the PMS stays the single source of truth. Marina checks and books
+  through its API, keeps no copy of the guest list, and fetches one booking at
+  a time, only after the reference and surname match. The PMS is already the
+  hotel's processor under its existing agreement.
+- **Hybrid**: for example rooms in the cloud PMS with activities and staff
+  requests kept locally, or a local copy of availability so that during an
+  internet outage she can take provisional requests and queue them until the
+  PMS is reachable again.
+
+Each of these plugs in behind the same `BookingSystem` interface, so the
+conversation side doesn't change. The cloud and hybrid adapters are not built
+yet.
 
 ## How it is built
 

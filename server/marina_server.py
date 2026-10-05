@@ -84,6 +84,17 @@ class ChatIn(BaseModel):
     speak: bool = True
 
 
+def _log_said(who, text):
+    """The log records what happened, not what guests said. At a hotel the
+    words can include names, emails and booking references, so they're left
+    out unless hotel.log_conversations is on."""
+    hotel_cfg = config.get("hotel") or {}
+    if hotel_cfg.get("enabled") and not hotel_cfg.get("log_conversations", False):
+        print(f"[{who}] ({len(text or '')} characters)", flush=True)
+    else:
+        print(f"[{who}] {text}", flush=True)
+
+
 def llm_error_message(e):
     msg = getattr(getattr(e, "response", None), "text", "") or str(e)
     if "invalid_api_key" in msg or "Incorrect API key" in msg:
@@ -166,10 +177,10 @@ def chat(body: ChatIn):
     if not text:
         return {"transcript": "", "reply": "", "speech": "", "cues": [],
                 "audio": None, "error": "Empty message."}
-    print(f"[you] {text}", flush=True)
+    _log_said("you", text)
     idle.note_interaction()
     result = _respond(text, body.speak)
-    print(f"[marina] {result['reply']}", flush=True)
+    _log_said("marina", result['reply'])
     return result
 
 
@@ -277,7 +288,7 @@ def _stream_reply(user_text, speak=True, transcript=None, extra_system=None,
         save_turn(user_text, heard)
     idle.note_interaction()
 
-    print(f"[marina] {heard}", flush=True)
+    _log_said("marina", heard)
     yield _ndjson({"type": "interrupted" if interrupted else "done",
                    "chunks": index, "reply": heard})
 
@@ -289,7 +300,7 @@ def chat_stream(body: ChatIn):
         return StreamingResponse(
             iter([_ndjson({"type": "error", "message": "Empty message."})]),
             media_type="application/x-ndjson")
-    print(f"[you] {text}", flush=True)
+    _log_said("you", text)
     return StreamingResponse(_stream_reply(text, body.speak),
                              media_type="application/x-ndjson")
 
@@ -319,14 +330,14 @@ def voice(audio: UploadFile = File(...), speak: bool = True):
     finally:
         tmp_path.unlink(missing_ok=True)
 
-    print(f"[you] {transcript}", flush=True)
+    _log_said("you", transcript)
 
     if not transcript:
         return {"transcript": "", "reply": "", "speech": "", "cues": [],
                 "audio": None, "error": "Didn't catch that."}
 
     result = _respond(transcript, speak, transcript=transcript)
-    print(f"[marina] {result['reply']}", flush=True)
+    _log_said("marina", result['reply'])
     return result
 
 
@@ -351,14 +362,14 @@ def listen_stop(speak: bool = True):
     finally:
         path.unlink(missing_ok=True)
 
-    print(f"[you] {transcript}", flush=True)
+    _log_said("you", transcript)
 
     if not transcript:
         return {"transcript": "", "reply": "", "speech": "", "cues": [],
                 "audio": None, "error": "Didn't catch that."}
 
     result = _respond(transcript, speak, transcript=transcript)
-    print(f"[marina] {result['reply']}", flush=True)
+    _log_said("marina", result['reply'])
     return result
 
 
@@ -377,7 +388,7 @@ def _stream_transcript(path):
     if not transcript:
         return _stream_error("Didn't catch that.")
 
-    print(f"[you] {transcript}", flush=True)
+    _log_said("you", transcript)
     idle.note_interaction()
     return StreamingResponse(
         _stream_reply(transcript, True, transcript=transcript),
@@ -525,7 +536,7 @@ def see(body: SeeIn):
     out["backend"] = active_endpoint()
     out["model"] = active_model()
     out["cues"] = parts["cues"]
-    print(f"[marina] {parts['speech']}", flush=True)
+    _log_said("marina", parts['speech'])
 
     note_exchange(body.question or "What is on my screen?",
                   f"(looked at your screen) {answer}")

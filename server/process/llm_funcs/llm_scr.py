@@ -336,6 +336,18 @@ def _rejects_tools(e):
 
 MAX_TOOL_ROUNDS = 4
 
+
+def _outcome(result):
+    """A tool result for the log: whether it worked, never the guest details
+    it carried. Booking errors are generic, so they're safe to keep."""
+    try:
+        data = json.loads(result)
+    except (TypeError, ValueError):
+        return "done"
+    if isinstance(data, dict) and "ok" in data:
+        return "ok" if data["ok"] else f"refused ({data.get('error', '')})"
+    return "done"
+
 # Longest message passed to the model; anything past it is dropped.
 MAX_INPUT_CHARS = int(_llm.get("max_input_chars", 1000))
 
@@ -422,7 +434,7 @@ def llm_stream(user_input=None, extra_system=None, use_tools=True):
         }]
         for i, call in sorted(calls.items()):
             result = tools.run(call["name"], call["arguments"])
-            print(f"[tool] {call['name']} -> {result[:160]}", flush=True)
+            print(f"[tool] {call['name']}: {_outcome(result)}", flush=True)
             messages.append({
                 "role": "tool",
                 "tool_call_id": call["id"] or f"call_{i}",

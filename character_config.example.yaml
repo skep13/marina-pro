@@ -39,6 +39,9 @@ hotel:
   profile: hotel.yaml
   database: hotel.db
   booking_system: local
+  # The log records what happened, not what was said. Turn this on only if
+  # the hotel needs conversation logs and has a retention policy for them.
+  log_conversations: false
 
 # Which desk she starts on: reception or phone. The menu switches it too.
 preset: reception
