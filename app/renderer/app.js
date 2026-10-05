@@ -1818,6 +1818,19 @@ if (new URLSearchParams(location.search).has('debug')) {
     heard: (text) => showHeard(text),
     say: (text) => say(text),
     hold: (offsets) => { debugHold = offsets; },
+    // Play one prepared line through the normal speech path, for scripted
+    // recordings: { audio: base64 wav, speech, cues }.
+    speak: async (ev) => {
+      const req = newRequest();
+      recording = false;
+      busy = true;
+      await playChunk({ type: 'chunk', ...ev }, req);
+      await untilSpoken();
+      endUtterance();
+      if (inflight === req) inflight = null;
+      busy = false;
+    },
+    audio: () => ({ ctx: ensureAudio(), analyser }),
     turn: (radians) => { if (vrm) vrm.scene.rotation.y = radians; },
     state: (name) => {
       recording = name === 'listen';
@@ -1944,8 +1957,10 @@ function pickGroup(list, text) {
 
 // Personality, e.g. Personal or Presentation. The bridge applies it from the
 // next reply on, and each one keeps its own conversation.
+// Every desk profile is in front of guests; only a personal 'default'
+// profile isn't.
 function markPresenting(preset) {
-  document.documentElement.classList.toggle('presenting', preset === 'presentation');
+  document.documentElement.classList.toggle('presenting', !!preset && preset !== 'default');
 }
 
 async function switchPreset(name) {
