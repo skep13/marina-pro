@@ -20,7 +20,7 @@ def reset():
     sys = booking_system()
     today = profile.now().date()
     with sys._lock, sys._db() as db:
-        for table in ("activity_bookings", "handoffs", "bookings"):
+        for table in ("activity_bookings", "handoffs", "outbox", "bookings"):
             db.execute(f"DELETE FROM {table}")
         for ref, first, last, room_id, arrives, nights, guests, channel in SEED:
             room = profile.room_types()[room_id]

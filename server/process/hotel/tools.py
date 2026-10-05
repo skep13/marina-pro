@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 
 from process import config
 from process.config import load_config
-from process.hotel import profile
+from process.hotel import notify, profile
 from process.hotel.store import BookingError, booking_system, normalise_ref
 
 
@@ -27,10 +27,6 @@ def _channel():
     """Which desk the guest is talking to: the profile's name, e.g.
     'reception' or 'phone'. Stored on bookings and handoffs."""
     return config.preset()
-
-
-def _spelled(ref):
-    return " ".join(ref)
 
 
 def _room_id(value):
@@ -67,7 +63,6 @@ def _verified(reference, last_name):
 def _summary(b):
     return {
         "reference": b["ref"],
-        "reference_spelled": _spelled(b["ref"]),
         "status": b["status"],
         "room": b["room_name"],
         "check_in": b["check_in"],
@@ -121,10 +116,26 @@ def book_room(room_type, check_in, check_out, guests, first_name, last_name,
     b = booking_system().create_booking(
         _room_id(room_type), check_in, check_out, guests, first_name, last_name,
         email=email, phone=phone, channel=_channel())
+    sent = notify.send_confirmation(b)
+    # The reference is left out on purpose: it goes to the guest privately.
+    out = {k: v for k, v in _summary(b).items() if k != "reference"}
     return _ok(
-        **_summary(b),
-        next_step=("The room is held. A secure payment link goes to the guest's "
-                   "email or phone to confirm it. Never take card details."))
+        **out, confirmation=sent,
+        next_step=(f"Tell the guest the room is held, and that their confirmation "
+                   f"with the booking reference is on its way to them by "
+                   f"{sent['by']}. Never read a booking reference out loud. The "
+                   "secure payment link follows separately; never take card details."))
+
+
+@_guarded
+def resend_confirmation(last_name, email):
+    b = booking_system().find_for_resend(last_name, email)
+    if not b:
+        raise BookingError("I couldn't find a current booking with that surname "
+                           "and email address.")
+    sent = notify.send_confirmation(b)
+    return _ok(confirmation=sent,
+               note="Sent to the address on the booking. Don't read the reference out.")
 
 
 @_guarded
@@ -207,6 +218,14 @@ SPECS = [
             "email": {"type": "string"}, "phone": {"type": "string"}},
             "required": ["room_type", "check_in", "check_out", "guests",
                          "first_name", "last_name"]}}),
+    ("resend_confirmation", resend_confirmation, {
+        "description": "Send a guest's confirmation, with their booking "
+                       "reference, again. Only goes to the email already on "
+                       "the booking.",
+        "parameters": {"type": "object", "properties": {
+            "last_name": _SURNAME,
+            "email": {"type": "string", "description": "The email address on the booking."}},
+            "required": ["last_name", "email"]}}),
     ("find_booking", find_booking, {
         "description": "Look up a booking. Needs the reference and the surname.",
         "parameters": {"type": "object", "properties": {

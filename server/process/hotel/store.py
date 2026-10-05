@@ -145,6 +145,16 @@ CREATE TABLE IF NOT EXISTS handoffs (
     summary TEXT,
     status TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS outbox (
+    id TEXT PRIMARY KEY,
+    created TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    recipient TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    body TEXT NOT NULL,
+    booking_ref TEXT,
+    status TEXT NOT NULL
+);
 """
 
 
@@ -399,10 +409,30 @@ class LocalBookingSystem(BookingSystem):
                         summary, "open"))
         return hid
 
+    # Messages to guests
+
+    def add_message(self, kind, recipient, subject, body, booking_ref, status):
+        mid = "M" + new_ref()
+        with self._lock, self._db() as db:
+            db.execute("INSERT INTO outbox VALUES (?,?,?,?,?,?,?,?)",
+                       (mid, _now_iso(), kind, recipient, subject, body,
+                        normalise_ref(booking_ref), status))
+        return mid
+
+    def find_for_resend(self, last_name, email):
+        """The guest's current booking, matched on surname and the email
+        already on it, so a confirmation can only go back to that address."""
+        with self._lock, self._db() as db:
+            row = db.execute(
+                "SELECT ref FROM bookings WHERE lower(last_name) = lower(?) AND "
+                "lower(email) = lower(?) AND status IN (?, ?) ORDER BY created DESC",
+                (str(last_name or "").strip(), str(email or "").strip(), *HOLDS_ROOM)).fetchone()
+        return self.get_booking(row["ref"]) if row else None
+
     # For the staff admin tool, not for Marina.
 
     def list(self, table, where="1=1", params=()):
-        assert table in ("bookings", "activity_bookings", "handoffs")
+        assert table in ("bookings", "activity_bookings", "handoffs", "outbox")
         with self._lock, self._db() as db:
             return [dict(r) for r in db.execute(
                 f"SELECT * FROM {table} WHERE {where} ORDER BY rowid", params)]

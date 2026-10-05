@@ -395,6 +395,7 @@ def llm_stream(user_input=None, extra_system=None, use_tools=True):
     spoke = False
     while True:
         calls = {}
+        said = ""   # this round's words, kept so she doesn't repeat them
         try:
             stream = (get_reply_stream(messages, tools=offer, tool_choice="auto")
                       if offer else get_reply_stream(messages))
@@ -410,6 +411,7 @@ def llm_stream(user_input=None, extra_system=None, use_tools=True):
                 if not piece:
                     continue
                 spoke = True
+                said += piece
                 yield piece
         except Exception as e:
             if offer is None or not _rejects_tools(e):
@@ -425,7 +427,7 @@ def llm_stream(user_input=None, extra_system=None, use_tools=True):
 
         messages = messages + [{
             "role": "assistant",
-            "content": None,
+            "content": said or None,
             "tool_calls": [
                 {"id": c["id"] or f"call_{i}", "type": "function",
                  "function": {"name": c["name"], "arguments": c["arguments"] or "{}"}}

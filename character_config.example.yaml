@@ -125,8 +125,8 @@ presets:
       - Never refer to anything the caller would have to see.
       - Read back names, phone numbers and email addresses to check them,
         spelling anything unusual letter by letter.
-      - Booking references are sent by text, but always say them too, one
-        character at a time.
+      - Booking references go to the caller by email or text. Never read one
+        out, even if asked; offer to send it again instead.
       - Before the call ends, sum up what you've done in one sentence and
         ask if there's anything else.
       - If the caller wants a person, pass it to staff and tell them when

@@ -57,6 +57,9 @@ def _snapshot():
         "bookings": list(reversed(bookings))[:50],
         "activities": list(reversed(activity_rows))[:50],
         "handoffs": list(reversed(sys.list("handoffs")))[:50],
+        "messages": [{k: m[k] for k in ("id", "created", "kind", "recipient", "subject",
+                                        "booking_ref", "status")}
+                     for m in reversed(sys.list("outbox"))][:50],
     }
 
 
@@ -152,6 +155,7 @@ button:hover { border-color: var(--accent); }
   <section><h2>Waiting for staff</h2><div class="scroll" id="handoffs"></div></section>
   <section><h2>Bookings</h2><div class="scroll" id="bookings"></div></section>
   <section><h2>Activities</h2><div class="scroll" id="activities"></div></section>
+  <section><h2>Messages to guests</h2><div class="scroll" id="messages"></div></section>
 </main>
 <script>
 const seen = new Set();
@@ -219,6 +223,15 @@ async function refresh() {
     ['Booking', (a) => `<span class="ref">${esc(a.ref)}</span>`],
     ['Status', (a) => `<span class="pill ${esc(a.status)}">${esc(cap(a.status))}</span>`],
   ], 'No activities booked yet.');
+  const sentLabel = { sent: 'Sent', queued: 'Queued: no email account connected', failed: 'Failed to send' };
+  document.getElementById('messages').innerHTML = rows(d.messages, 'id', [
+    ['When', (m) => time(m.created)],
+    ['By', (m) => (m.kind === 'sms' ? 'Text' : 'Email')],
+    ['To', (m) => esc(m.recipient)],
+    ['Subject', (m) => esc(m.subject), 'wrap'],
+    ['Booking', (m) => `<span class="ref">${esc(m.booking_ref || '–')}</span>`],
+    ['Status', (m) => `<span class="pill ${m.status === 'sent' ? '' : 'open'}">${esc(sentLabel[m.status] || m.status)}</span>`],
+  ], 'No messages yet.');
   first = false;
 }
 refresh();
