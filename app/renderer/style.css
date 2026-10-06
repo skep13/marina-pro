@@ -74,6 +74,15 @@ body.reveal #chrome { opacity: 1; }
   height: 100%;
   display: block;
 }
+/* On the desktop the window is see-through, so wherever she runs past its
+   edges she'd end in a hard line. Fade her out at the sides and bottom
+   instead. Stage view and the web app have their own backdrop. */
+html:not(.stage):not(.web) #stage {
+  mask-image:
+    linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%),
+    linear-gradient(to bottom, #000 76%, transparent 100%);
+  mask-composite: intersect;
+}
 
 #picker {
   position: fixed;

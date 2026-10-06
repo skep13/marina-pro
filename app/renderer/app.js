@@ -134,8 +134,8 @@ const IDLE_BONES = [
 const REST_POSE = {
   leftShoulder:  [0, 0, 0.05],
   rightShoulder: [0, 0, -0.06],
-  leftUpperArm:  [0.06, 0, -1.24],
-  rightUpperArm: [0.04, 0, 1.20],
+  leftUpperArm:  [0.06, 0, -1.29],
+  rightUpperArm: [0.04, 0, 1.25],
   leftLowerArm:  [0, 0.24, -0.10],
   rightLowerArm: [0, -0.20, 0.09],
   leftHand:      [0, 0, -0.07],
