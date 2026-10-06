@@ -625,9 +625,11 @@ def backend_set(body: BackendIn):
 
 
 def _preset_info():
+    from process.hotel import profile as hotel
     return {
         "preset": cfg.preset(),
         "presets": [{"name": n, "label": cfg.preset_label(n)} for n in cfg.presets()],
+        "hotel": hotel.load().get("name") if hotel.enabled() else None,
     }
 
 

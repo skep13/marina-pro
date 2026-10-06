@@ -335,4 +335,19 @@ html.stage, .stage body {
 }
 .stage #bar { width: min(560px, calc(100% - 80px)); bottom: 40px; }
 .stage #status { bottom: 14px; font-size: 12px; }
+/* In front of guests, the controls stay out of the way in the corner until
+   hovered, and the status only shows when something needs attention. */
+.stage #chrome { left: auto; right: 18px; top: 16px; transform: none; opacity: 0; }
+.stage #chrome:hover, .stage #chrome:focus-within { opacity: 1; }
+.stage.presenting #status.ok { opacity: 0; }
+.stage.presenting #status.ok:hover { opacity: 1; }
+#brand { display: none; }
+.stage.presenting #brand:not(.hidden) {
+  position: fixed; top: 22px; left: 28px; z-index: 6;
+  display: flex; align-items: center; gap: 9px;
+  color: #c9a45c; font-size: 13px; letter-spacing: .06em; text-transform: uppercase;
+}
+#brand-name { color: #e8e6e1; font-weight: 600; }
+#brand-desk { color: #8a90a0; }
+#brand-desk:not(:empty)::before { content: "·"; margin-right: 9px; color: #5b6170; }
 .stage #notice { bottom: 110px; font-size: 15px; width: min(640px, calc(100% - 80px)); }

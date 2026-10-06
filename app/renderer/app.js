@@ -107,6 +107,7 @@ async function mountVRM(arrayBuffer, label) {
   collectMouthClose(next);
   collectBrows(next);
   restyleFace(next);
+  calmOutlines(next);
 
   if (next.lookAt) {
     next.lookAt.target = lookTarget;
@@ -243,6 +244,17 @@ function recolourTexture(tex, box, opts) {
   tex.image = canvas;
   tex.needsUpdate = true;
   return touched;
+}
+
+// Some exported models carry a reddish outline that shows as a thin line
+// along the clothes. A dark, slightly blue outline reads as a clean edge.
+function calmOutlines(v) {
+  v.scene.traverse((obj) => {
+    const mats = Array.isArray(obj.material) ? obj.material : obj.material ? [obj.material] : [];
+    for (const m of mats) {
+      if (m.isMToonMaterial && m.outlineColorFactor) m.outlineColorFactor.setRGB(0.05, 0.055, 0.075);
+    }
+  });
 }
 
 function restyleFace(v) {
@@ -1389,6 +1401,7 @@ function setStatus(kind, text) {
   // Guests don't need to see model names or file names.
   if (kind === 'ok' && presenting()) text = 'ready';
   dot.className = kind;
+  el('status').className = kind;
   statusText.textContent = text;
 }
 
@@ -1961,6 +1974,26 @@ function pickGroup(list, text) {
 // profile isn't.
 function markPresenting(preset) {
   document.documentElement.classList.toggle('presenting', !!preset && preset !== 'default');
+  paintBrand();
+}
+
+// The hotel's name and which desk this is, shown in the corner of stage view.
+let hotelName = null;
+
+function paintBrand() {
+  const desk = personality.presets.find((p) => p.name === personality.preset)?.label || '';
+  el('brand-name').textContent = hotelName || '';
+  el('brand-desk').textContent = hotelName ? desk : '';
+  el('brand').classList.toggle('hidden', !hotelName);
+}
+
+async function loadBrand() {
+  try {
+    const info = await (await fetch(`${BRIDGE}/preset`)).json();
+    hotelName = info.hotel || null;
+    personality = { preset: info.preset, presets: info.presets || [] };
+    paintBrand();
+  } catch { /* the bridge isn't up yet; the next health check tries again */ }
 }
 
 async function switchPreset(name) {
@@ -2087,6 +2120,7 @@ async function pollForBridge({ quietFor = 16000 } = {}) {
         if (see) see.hidden = !info.vision;
         learnBrains(info.llm_labels);
         if (info.preset) markPresenting(info.preset);
+        if (hotelName === null) loadBrand();
         paintBrain(info.llm_mode || 'auto', info.llm_using, info.model);
         setStatus('ok', `ready · ${info.model}`);
         hideNotice('bridge');

@@ -131,6 +131,7 @@ tr.new td { background: var(--new); transition: background 3s ease; }
 .ref { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; }
 .pill { display: inline-block; padding: 1px 8px; border-radius: 99px; background: var(--pill); font-size: 12px; }
 .pill.open { color: var(--open); }
+.pill.queued { color: var(--muted); }
 .pill.cancelled { color: var(--muted); text-decoration: line-through; }
 .empty { padding: 14px 16px; color: var(--muted); }
 button { font: inherit; padding: 3px 10px; border-radius: 7px; border: 1px solid var(--line);
@@ -163,6 +164,11 @@ let first = true;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const day = (iso) => new Date(iso + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
 const time = (iso) => new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+const made = (iso) => {
+  const d = new Date(iso);
+  return d.toDateString() === new Date().toDateString()
+    ? time(iso) : `${d.toLocaleDateString(undefined, { weekday: 'short' })} ${time(iso)}`;
+};
 const money = (n, cur) => new Intl.NumberFormat(undefined, { style: 'currency', currency: cur }).format(n);
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '–');
 const channel = (c) => ({ reception: 'Reception', phone: 'Phone' }[c] || esc(cap(c)));
@@ -213,7 +219,7 @@ async function refresh() {
     ['Total', (b) => money(b.total, b.currency)],
     ['Via', (b) => channel(b.channel)],
     ['Status', (b) => `<span class="pill ${esc(b.status)}">${b.status === 'requested' ? 'Awaiting payment' : esc(cap(b.status))}</span>`],
-    ['Made', (b) => time(b.created)],
+    ['Made', (b) => made(b.created)],
   ], 'No bookings yet.');
   document.getElementById('activities').innerHTML = rows(d.activities, 'id', [
     ['Activity', (a) => esc(a.activity)],
@@ -223,14 +229,14 @@ async function refresh() {
     ['Booking', (a) => `<span class="ref">${esc(a.ref)}</span>`],
     ['Status', (a) => `<span class="pill ${esc(a.status)}">${esc(cap(a.status))}</span>`],
   ], 'No activities booked yet.');
-  const sentLabel = { sent: 'Sent', queued: 'Queued: no email account connected', failed: 'Failed to send' };
+  const sentLabel = { sent: 'Sent', queued: 'Queued: mail server not connected', failed: 'Failed to send' };
   document.getElementById('messages').innerHTML = rows(d.messages, 'id', [
     ['When', (m) => time(m.created)],
     ['By', (m) => (m.kind === 'sms' ? 'Text' : 'Email')],
     ['To', (m) => esc(m.recipient)],
     ['Subject', (m) => esc(m.subject), 'wrap'],
     ['Booking', (m) => `<span class="ref">${esc(m.booking_ref || '–')}</span>`],
-    ['Status', (m) => `<span class="pill ${m.status === 'sent' ? '' : 'open'}">${esc(sentLabel[m.status] || m.status)}</span>`],
+    ['Status', (m) => `<span class="pill ${m.status === 'failed' ? 'open' : m.status === 'queued' ? 'queued' : ''}">${esc(sentLabel[m.status] || m.status)}</span>`],
   ], 'No messages yet.');
   first = false;
 }
