@@ -18,13 +18,13 @@ machines, and no AI cloud service is involved at any point.
 | | |
 | --- | --- |
 | **Rooms and prices** | Checks what's free for any dates and quotes the total, including weekend rates. |
-| **Bookings** | Reads the details back, waits for a yes, books, and gives a reference that's easy to say aloud. Rooms are held until the guest pays through a secure link. |
+| **Bookings** | Reads the details back, waits for a yes, books, and sends the confirmation and reference to the guest's email. Rooms are held until the guest pays through a secure link. |
 | **Changes and cancellations** | Needs the booking reference and the surname. Explains the cancellation policy before cancelling. |
 | **Activities** | Lists times with spaces left, and books them onto a guest's stay. |
 | **Questions about the hotel** | Answers from the hotel's own facts file: check-in times, parking, pets, breakfast, the spa. Says so when she doesn't know. |
 | **Handing over** | Complaints, special requests, emergencies and "can I speak to someone" go straight to staff. |
 | **Two desks** | A Reception profile for guests in person and a Phone line profile for callers, switchable live. |
-| **Front desk dashboard** | Staff see every booking, activity and hand-over as it happens. |
+| **Front desk dashboard** | Staff see every booking, activity, hand-over and confirmation email as it happens. |
 
 ![The front desk dashboard](docs/dashboard.jpg)
 
@@ -56,6 +56,9 @@ that a voice alone can't:
   starts a fresh conversation, so nothing carries over.
 - **Bookings are protected.** Looking up, changing or cancelling needs both the
   reference and the surname. There's no way to ask her for a list of guests.
+- **References are never said out loud.** A reference read aloud at a busy desk
+  can be overheard, so it goes to the guest by email instead. A lost one is
+  only ever resent to the address already on the booking.
 - **Right to erasure.** A guest's personal details can be wiped while the stay
   itself is kept for the hotel's accounts.
 - **On topic.** She only helps with the hotel, and has no ability to browse,
@@ -250,6 +253,9 @@ database. Not yet built:
   call; connecting a number needs a telephony service such as Twilio or SIP.
 - **Payment links.** The booking flow tells the guest a link is coming, but
   sending it needs a payment provider.
+- **Text messages.** Confirmations by email go through the hotel's own mail
+  server once `hotel.email` is set, and wait in the dashboard's outbox until
+  then. Texts need an SMS provider.
 - **Property management systems.** The interface is there; adapters for Opera,
   Mews or Cloudbeds aren't.
 - **Other languages.** The model and voice support several; speech recognition
